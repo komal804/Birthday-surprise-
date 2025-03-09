@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <style>
+        body {
+            text-align: center;
+            background: #ffcccb;
+            font-family: Arial, sans-serif;
+        }
+        #cake {
+            width: 200px;
+            margin: 50px auto;
+            position: relative;
+        }
+        .candle {
+            width: 10px;
+            height: 50px;
+            background: red;
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .flame {
+            width: 15px;
+            height: 20px;
+            background: yellow;
+            border-radius: 50%;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #poetry, #photos {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎉 Happy Birthday! 🎂</h1>
+    <div id="cake">
+        <img src="https://i.imgur.com/O9D2QeK.png" width="200">
+        <div class="candle">
+            <div class="flame" id="flame"></div>
+        </div>
+    </div>
+    <p>Blow on the candle to put it out! 🎂</p>
+    <audio id="song" src="happy-birthday.mp3"></audio>
+    <div id="poetry"><p>"May your day be filled with joy and love!" 💖</p></div>
+    <div id="photos"><img src="your-photo.jpg" width="200"></div>
+    
+    <script>
+        const flame = document.getElementById("flame");
+        const song = document.getElementById("song");
+        const poetry = document.getElementById("poetry");
+        const photos = document.getElementById("photos");
+        
+        function blowCandle() {
+            flame.style.display = "none";
+            song.play();
+            setTimeout(() => { poetry.style.display = "block"; }, 3000);
+            setTimeout(() => { photos.style.display = "block"; }, 5000);
+        }
+        
+        window.addEventListener("click", blowCandle);
+        
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    let analyser = audioContext.createAnalyser();
+                    let source = audioContext.createMediaStreamSource(stream);
+                    source.connect(analyser);
+                    analyser.fftSize = 256;
+                    let buffer = new Uint8Array(analyser.frequencyBinCount);
+                    
+                    function checkBlow() {
+                        analyser.getByteFrequencyData(buffer);
+                        let volume = buffer.reduce((a, b) => a + b) / buffer.length;
+                        if (volume > 50) blowCandle();
+                        requestAnimationFrame(checkBlow);
+                    }
+                    checkBlow();
+                })
+                .catch(err => console.log("Mic access denied"));
+        }
+    </script>
+</body>
+</html>
